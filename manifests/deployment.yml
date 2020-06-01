@@ -1,0 +1,48 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: drupal
+  labels:
+    app: drupal
+  namespace: default
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: drupal
+  template:
+    metadata:
+      labels:
+        app: drupal
+    spec:
+      containers:
+        - image: drupalaks.azurecr.io/demodrupalaks:234
+          name: drupal
+          ports:
+          - containerPort: 80
+          volumeMounts:
+          - mountPath: /var/log/apache2
+            name: apache2-vol
+          - mountPath: /var/www/html/docroot/sites/default/files
+            name: files-vol
+          - mountPath: /var/www/html/config
+            name: config-vol
+          - mountPath: /var/www/html/config/secrets.txt
+            name: secrets-vol
+            subPath: secrets.txt
+            readOnly: true
+      imagePullSecrets:
+        - name: drupal-secrets
+      volumes:
+        - name: secrets-vol
+          secret:
+            secretName: db-secrets
+        - name: config-vol
+          persistentVolumeClaim:
+            claimName: configpvc
+        - name: files-vol
+          persistentVolumeClaim:
+            claimName: filespvc
+        - name: apache2-vol
+          persistentVolumeClaim:
+            claimName: apache2pvc

@@ -1,0 +1,102 @@
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: apache2pv
+spec:
+  accessModes:
+    - ReadWriteMany
+  storageClassName: azurefile-premium
+  capacity:
+    storage: 100Gi
+  azureFile:
+    secretName: sa-secrets
+    shareName: apache2logs
+    readOnly: false
+  claimRef:
+    namespace: default
+    name: apache2pvc
+
+---
+kind: PersistentVolumeClaim
+apiVersion: v1
+metadata:
+  name: apache2pvc
+spec:
+  accessModes:
+    - ReadWriteMany
+  storageClassName: azurefile-premium
+  resources:
+    requests:
+      storage: 100Gi #must be minimum 100Gi if using Premium_LRS
+
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: filespv
+spec:
+  accessModes:
+    - ReadWriteMany
+  storageClassName: azurefile-premium
+  capacity:
+    storage: 100Gi
+  azureFile:
+    secretName: sa-secrets
+    shareName: files
+    readOnly: false
+  claimRef:
+    namespace: default
+    name: filespvc
+  mountOptions:
+  - dir_mode=0777
+  - file_mode=0777
+  - uid=1000
+  - gid=33
+  - mfsymlinks
+  - nobrl
+
+---
+kind: PersistentVolumeClaim
+apiVersion: v1
+metadata:
+  name: filespvc
+spec:
+  accessModes:
+    - ReadWriteMany
+  storageClassName: azurefile-premium
+  resources:
+    requests:
+      storage: 100Gi
+
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: configpv
+spec:
+  accessModes:
+    - ReadWriteMany
+  storageClassName: azurefile-premium
+  capacity:
+    storage: 100Gi
+  azureFile:
+    secretName: sa-secrets
+    shareName: configs
+    readOnly: false
+  claimRef:
+    namespace: default
+    name: configpvc
+
+---
+kind: PersistentVolumeClaim
+apiVersion: v1
+metadata:
+  name: configpvc
+spec:
+  accessModes:
+    - ReadWriteMany
+  storageClassName: azurefile-premium
+  resources:
+    requests:
+      storage: 100Gi
