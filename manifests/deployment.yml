@@ -16,7 +16,7 @@ spec:
         app: drupal
     spec:
       containers:
-        - image: drupalaks.azurecr.io/demodrupalaks:234
+        - image: <registry>/<image-name>:<tag> # Update to point to your image
           name: drupal
           ports:
           - containerPort: 80
