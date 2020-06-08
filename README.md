@@ -82,7 +82,7 @@ Our recommendation is to place your code in a directory directly off the root of
 MySQL (or other Drupal compatible database) is not included in the Dockerfile. In Azure, it is recommended that you run an instance of [Azure Database for MySQL](https://docs.microsoft.com/en-us/azure/mysql/) or [MariaDB](https://docs.microsoft.com/en-us/azure/Mariadb/) in the same region as your AKS cluster.
 
 The Kubernetes Secrets resource can be used to secure the database connection string. In our `secrets.yml` file we set secrets:
-```
+```YAML
 apiVersion: v1
 kind: Secret
 metadata:
@@ -94,12 +94,12 @@ data:
 #secrets.txt: db=DB_NAME&dbuser=DB_USERNAME&dbpw=DB_PASSWORD&dbhost=DB_HOST
 ```
 > To output base64 encoded strings for use in your `secrets.yml`, use the command:
-  ```
+  ```BASH
   $ echo -n "<string to encode>" | base64 -w 0
   ```
 
 These secrets are mounted in volumeMounts within our `deployment.yaml` file:
-```
+```YAML
 volumes:
 - name: secrets-vol
   secret:
@@ -112,7 +112,7 @@ volumeMounts:
 ```
 In our Drupal `settings.php` file, we consume the variables in the `$databases` array:
 
-```
+```PHP
 $secret = file_get_contents('/var/www/html/config/secrets.txt');
 $secret = trim($secret);
 $dbconnstring = parse_str($secret,$output);
@@ -142,17 +142,21 @@ The persistence of files is critical for a CMS website like Drupal. Examples of 
 - Unstructured data such as images and documents that are uploaded by content creators, i.e. not part of the code repo.
 - Logs such as `php-error.log` and `drupal.log` (when the Drupal core Syslog module is enabled).
 - Configurations that use files outside the repo such as these `settings.php` examples:
-  ```
-  * Location of the site configuration files.
-
-  settings['config_sync_directory'] = '/var/www/html/config';
-
+  ```PHP
   /**
   * Salt for one-time login links, cancel links, form tokens, etc. 
   *
   * Include your salt value in a salt.txt file and reference it with:
   */
   $settings['hash_salt'] = file_get_contents('/var/www/html/config/salt.txt');
+  
+  /* 
+  * Storage location of the sync directory.
+  */
+
+  $settings['config_sync_directory'] = '../config/sync'; // Drupal 8.8.x
+  
+  $config_directories['sync'] = '../config/sync'; // Drupal 8.0.0 to 8.7.x
   ```
 To persist files, we mount to Azure Storage persistent volumes that are provided by the `azure-file` or `azure-file-premium` Storage Classes in AKS: 
 ```
@@ -166,7 +170,7 @@ managed-premium     kubernetes.io/azure-disk   3d8h
 Azure Files is our storage class of choice because its ReadWriteMany access mode allows for horizontal pod scaling, i.e. across nodes. For production deployment, `azurefile-premium` is recommended for best performance.
 
 Volume mounts are declared in the `manifests/deployment.yml` file:
-```
+```YAML
 volumeMounts:
 - mountPath: /var/log/apache2
   name: apache2-vol
@@ -192,7 +196,7 @@ Ensure that your [Prerequisites](#prerequisites) are in place.
 Clone this repo to your local dev environment. 
 
 Edit the the following section of the `Dockerfile` to point to the source for your Drupal code:
-```
+```DOCKER
 # Copy drupal code
 WORKDIR /var/www/html
 COPY . /var/www/html
@@ -215,7 +219,7 @@ docker push myacr.azurecr.io/drupalaks:v1
 ### Step 2 - Deploy to AKS
 
 1. Customize the `image:` value in the `containers:` spec if the `deployment.yml` manifest, e.g.
-    ```
+    ```YAML
     containers:
         -
           image: myacr.azurecr.io/drupalaks:v1
