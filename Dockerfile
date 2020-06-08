@@ -113,12 +113,11 @@ COPY . /var/www/html
 #Alternatively you can clone from a remote repository
 #RUN git clone -b $BRANCH https://$GIT_TOKEN@github.com/$GIT_REPO.git .
 
+RUN mkdir -p /var/www/html/docroot/sites/default/files
+RUN mkdir -p /var/www/html/config
 RUN useradd --shell /bin/bash d8admin
 RUN chown -R d8admin:www-data ./docroot;
 RUN find . -type d -exec chmod u=rwx,g=rx,o= '{}' \;
 RUN find . -type f -exec chmod u=rw,g=r,o= '{}' \;
-
-RUN mkdir -p /var/www/html/docroot/sites/default/files
-RUN mkdir -p /var/www/html/config
 
 ENTRYPOINT ["/bin/entrypoint.sh"]
